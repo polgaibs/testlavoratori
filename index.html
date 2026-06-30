@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- REV. 2 — 30 giugno 2026 -->
+<!-- REV. 3 — 30 giugno 2026 -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -530,7 +530,7 @@ function inviaTest(perScadenzaTempo) {
     if (corretta) punteggio++;
     return {
       id: domanda.id,
-      domanda: domanda.testo,
+      testo: domanda.testo,
       risposta: rispostaTesto,
       corretta: corretta ? "SI" : "NO"
     };
@@ -540,7 +540,7 @@ function inviaTest(perScadenzaTempo) {
   // così nel foglio Google ogni domanda ha sempre la stessa colonna fissa.
   const risposteOrdinate = DOMANDE.map(dOriginale => {
     const trovata = dettaglio.find(d => d.id === dOriginale.id);
-    return trovata || { id: dOriginale.id, risposta: "", corretta: "NO" };
+    return trovata || { id: dOriginale.id, testo: dOriginale.testo, risposta: "", corretta: "NO" };
   });
 
   const payload = {
