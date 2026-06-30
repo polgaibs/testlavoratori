@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- REV. 3 — 30 giugno 2026 -->
+<!-- REV. 4 — 30 giugno 2026 -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -342,6 +342,7 @@ document.getElementById("btn-inizia").addEventListener("click", () => {
   const nomeInserito = campoNome.value.trim();
   const pinInserito = document.getElementById("campo-pin").value.trim();
   const erroreEl = document.getElementById("errore-id");
+  const bottoneInizia = document.getElementById("btn-inizia");
 
   const nomeValido = STUDENTI.some(n => normalizza(n) === normalizza(nomeInserito));
 
@@ -357,9 +358,40 @@ document.getElementById("btn-inizia").addEventListener("click", () => {
   }
 
   erroreEl.style.display = "none";
-  nomeStudente = nomeInserito;
-  document.getElementById("schermata-id").classList.add("nascosto");
-  document.getElementById("schermata-istruzioni").classList.remove("nascosto");
+  bottoneInizia.disabled = true;
+  bottoneInizia.textContent = "Verifica in corso...";
+
+  // Controllo se questo nominativo ha già completato il test,
+  // interrogando lo script Google in lettura prima di procedere.
+  const urlControllo = URL_SCRIPT_GOOGLE + "?azione=controllaNome&nome=" + encodeURIComponent(nomeInserito);
+
+  fetch(urlControllo)
+    .then(risposta => risposta.json())
+    .then(risultato => {
+      bottoneInizia.disabled = false;
+      bottoneInizia.textContent = "Inizia il test";
+
+      if (risultato.giaPresente) {
+        erroreEl.textContent = "Risulta che questo nominativo ha già completato il test in precedenza. Non è possibile ripeterlo. Se ritieni si tratti di un errore, rivolgiti al responsabile in aula.";
+        erroreEl.style.display = "block";
+        return;
+      }
+
+      nomeStudente = nomeInserito;
+      document.getElementById("schermata-id").classList.add("nascosto");
+      document.getElementById("schermata-istruzioni").classList.remove("nascosto");
+    })
+    .catch(() => {
+      // Se il controllo fallisce per problemi di rete, lasciamo comunque
+      // procedere lo studente: il blocco definitivo avviene comunque lato
+      // Google al momento dell'invio finale, questo controllo è solo
+      // un avviso preventivo in più.
+      bottoneInizia.disabled = false;
+      bottoneInizia.textContent = "Inizia il test";
+      nomeStudente = nomeInserito;
+      document.getElementById("schermata-id").classList.add("nascosto");
+      document.getElementById("schermata-istruzioni").classList.remove("nascosto");
+    });
 });
 
 // ============================================================
