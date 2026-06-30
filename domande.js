@@ -10,16 +10,19 @@
 
 const DOMANDE = [
   {
+    id: "D1",
     testo: "Domanda di prova numero 1: qual è la capitale d'Italia?",
     opzioni: ["Milano", "Roma", "Napoli"],
     corretta: 1
   },
   {
+    id: "D2",
     testo: "Domanda di prova numero 2: quanto fa 7 x 6?",
     opzioni: ["42", "36", "48"],
     corretta: 0
   },
   {
+    id: "D3",
     testo: "Domanda di prova numero 3: in che anno è stata fondata la Repubblica Italiana?",
     opzioni: ["1946", "1861", "1918"],
     corretta: 0

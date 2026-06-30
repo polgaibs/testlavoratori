@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Test SILP CGIL Brescia</title>
+<title>Test Scuola Pol.G.A.I. Brescia</title>
 <style>
   :root {
     --blu: #1d3557;
@@ -176,7 +176,7 @@
 <body>
 
 <header>
-  <h1>SILP CGIL Brescia — Test di valutazione</h1>
+  <h1>Scuola Pol.G.A.I. Brescia — Test di valutazione</h1>
 </header>
 
 <div class="contenitore">
@@ -211,6 +211,7 @@
       <div class="numero-domanda" id="numero-domanda"></div>
       <div class="testo-domanda" id="testo-domanda"></div>
       <div id="contenitore-opzioni"></div>
+      <p class="errore" id="errore-risposta-obbligatoria">Devi selezionare una risposta prima di continuare.</p>
       <div class="navigazione">
         <button class="btn-secondario" id="btn-indietro">Indietro</button>
         <button id="btn-avanti">Avanti</button>
@@ -376,6 +377,7 @@ function avviaOppureRiprendi() {
     domandeMischiate = mischia(DOMANDE).map(d => {
       const opzioniConIndice = d.opzioni.map((testo, i) => ({ testo, corretta: i === d.corretta }));
       return {
+        id: d.id,
         testo: d.testo,
         opzioni: mischia(opzioniConIndice)
       };
@@ -460,6 +462,7 @@ function mostraDomanda() {
   const domanda = domandeMischiate[indiceCorrente];
   document.getElementById("numero-domanda").textContent = `Domanda ${indiceCorrente + 1} di ${domandeMischiate.length}`;
   document.getElementById("testo-domanda").textContent = domanda.testo;
+  document.getElementById("errore-risposta-obbligatoria").style.display = "none";
 
   const percentuale = ((indiceCorrente) / domandeMischiate.length) * 100;
   document.getElementById("barra-interna").style.width = percentuale + "%";
@@ -494,6 +497,10 @@ document.getElementById("btn-indietro").addEventListener("click", () => {
 });
 
 document.getElementById("btn-avanti").addEventListener("click", () => {
+  if (risposteDate[indiceCorrente] === null) {
+    document.getElementById("errore-risposta-obbligatoria").style.display = "block";
+    return;
+  }
   if (indiceCorrente < domandeMischiate.length - 1) {
     indiceCorrente++;
     salvaStato();
@@ -521,10 +528,18 @@ function inviaTest(perScadenzaTempo) {
     const corretta = indiceRisposta !== null && domanda.opzioni[indiceRisposta].corretta;
     if (corretta) punteggio++;
     return {
+      id: domanda.id,
       domanda: domanda.testo,
       risposta: rispostaTesto,
       corretta: corretta ? "SI" : "NO"
     };
+  });
+
+  // Riordina le risposte secondo l'ordine originale delle domande (D1, D2, D3...)
+  // così nel foglio Google ogni domanda ha sempre la stessa colonna fissa.
+  const risposteOrdinate = DOMANDE.map(dOriginale => {
+    const trovata = dettaglio.find(d => d.id === dOriginale.id);
+    return trovata || { id: dOriginale.id, risposta: "", corretta: "NO" };
   });
 
   const payload = {
@@ -533,18 +548,26 @@ function inviaTest(perScadenzaTempo) {
     punteggio: punteggio,
     totaleDomande: domandeMischiate.length,
     scadutoPerTempo: perScadenzaTempo ? "SI" : "NO",
-    dettaglio: dettaglio
+    dettaglio: dettaglio,
+    risposteOrdinate: risposteOrdinate
   };
 
   fetch(URL_SCRIPT_GOOGLE, {
     method: "POST",
-    mode: "no-cors",
     headers: { "Content-Type": "text/plain" },
     body: JSON.stringify(payload)
   })
-  .then(() => {
+  .then(risposta => risposta.json())
+  .then(risultato => {
     cancellaSalvataggio();
     document.getElementById("schermata-invio").classList.add("nascosto");
+    if (risultato.esito === "duplicato") {
+      document.getElementById("schermata-fine").innerHTML =
+        "<h2 style='color:#e63946;'>Test già inviato</h2>" +
+        "<p>Risulta che questo nominativo ha già completato il test in precedenza. " +
+        "Non è possibile inviarlo una seconda volta.</p>" +
+        "<p>Se ritieni si tratti di un errore, rivolgiti al responsabile in aula.</p>";
+    }
     document.getElementById("schermata-fine").classList.remove("nascosto");
   })
   .catch((errore) => {

@@ -19,11 +19,19 @@
 ## Cosa fare PRIMA di ogni somministrazione del test
 
 1. Apri `index.html` e cambia il valore di `PIN_CORRETTO` con un nuovo PIN.
-2. Aggiorna `domande.js` con le domande reali (se non già fatto).
-3. Aggiorna `studenti.js` con l'elenco reale dei 250 nomi (se non già fatto).
-4. Carica le modifiche su GitHub (basta sostituire i file dal sito di GitHub, anche da telefono).
-5. Genera il QR code che punta all'indirizzo del sito (te lo preparo io quando vuoi).
-6. In aula, comunica il PIN solo a voce, immediatamente prima di far partire il test.
+2. Aggiorna `domande.js` con le domande reali, dando a ognuna un id univoco (D1, D2, D3...).
+3. Aggiorna `studenti.js` con l'elenco reale dei 250 nomi.
+4. IMPORTANTE: apri lo script Google Apps collegato al foglio e aggiorna l'elenco `ID_DOMANDE` con gli stessi id usati in `domande.js`, nello stesso ordine. Se questo elenco non corrisponde, le colonne del foglio non saranno corrette.
+5. Pubblica una nuova distribuzione dello script (Distribuisci > Gestisci distribuzioni > icona matita > Nuova versione > Distribuisci), così le modifiche allo script vengono applicate.
+6. Carica le modifiche su GitHub (basta sostituire i file dal sito di GitHub, anche da telefono).
+7. Genera il QR code che punta all'indirizzo del sito.
+8. In aula, comunica il PIN solo a voce, immediatamente prima di far partire il test.
+
+## Protezioni già attive
+
+- Risposta obbligatoria per ogni domanda prima di poter proseguire.
+- Un nominativo che ha già completato il test non può inviarlo una seconda volta (controllo lato Google, non aggirabile cambiando dispositivo).
+- Le risposte nel foglio sono salvate in colonne fisse per domanda originale (Risposta D1, Risposta D2...), indipendentemente dall'ordine mischiato mostrato allo studente.
 
 ## Prossimi passi (da fare insieme)
 
