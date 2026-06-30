@@ -1,5 +1,6 @@
 // ============================================================
 // FILE DOMANDE
+// REV. 2 — 30 giugno 2026
 // Per modificare il quiz, modifica solo questo file.
 // Ogni domanda ha: testo, tre opzioni (A B C) e l'indice
 // della risposta corretta (0 = A, 1 = B, 2 = C).
