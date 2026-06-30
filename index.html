@@ -554,20 +554,13 @@ function inviaTest(perScadenzaTempo) {
 
   fetch(URL_SCRIPT_GOOGLE, {
     method: "POST",
+    mode: "no-cors",
     headers: { "Content-Type": "text/plain" },
     body: JSON.stringify(payload)
   })
-  .then(risposta => risposta.json())
-  .then(risultato => {
+  .then(() => {
     cancellaSalvataggio();
     document.getElementById("schermata-invio").classList.add("nascosto");
-    if (risultato.esito === "duplicato") {
-      document.getElementById("schermata-fine").innerHTML =
-        "<h2 style='color:#e63946;'>Test già inviato</h2>" +
-        "<p>Risulta che questo nominativo ha già completato il test in precedenza. " +
-        "Non è possibile inviarlo una seconda volta.</p>" +
-        "<p>Se ritieni si tratti di un errore, rivolgiti al responsabile in aula.</p>";
-    }
     document.getElementById("schermata-fine").classList.remove("nascosto");
   })
   .catch((errore) => {
