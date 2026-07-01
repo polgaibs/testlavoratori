@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- REV. 12 — 1 luglio 2026 (title pagina allineato a modifica manuale) -->
+<!-- REV. 13 — 1 luglio 2026 (termina per tutti + nuova sessione/turno) -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -177,6 +177,33 @@
     background: #666;
     cursor: default;
   }
+  .btn-termina-sincronizzato {
+    background: var(--rosso);
+    color: white;
+    border: none;
+    padding: 14px 30px;
+    font-size: clamp(0.9rem, 1.4vw, 1.1rem);
+    font-weight: 700;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    margin-top: 1.2vh;
+  }
+  .btn-termina-sincronizzato:hover { background: #c62d3a; }
+  .btn-termina-sincronizzato:disabled { background: #666; cursor: default; }
+  .btn-nuova-sessione {
+    background: var(--oro);
+    color: var(--blu-scuro);
+    border: none;
+    padding: 14px 30px;
+    font-size: clamp(0.9rem, 1.4vw, 1.1rem);
+    font-weight: 700;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    margin-top: 1.2vh;
+  }
+  .btn-nuova-sessione:hover { background: #b8934a; }
   .stato-avvio {
     margin-top: 1.2vh;
     font-size: clamp(0.85rem, 1.2vw, 1.05rem);
@@ -240,7 +267,10 @@
     </div>
 
     <button class="btn-avvia-sincronizzato" id="btn-avvia-tutti">Avvia il test per tutti</button>
-    <p class="stato-avvio nascosto" id="stato-avvio" style="display:none;">Il test è stato avviato per tutti gli studenti in attesa.</p>
+    <button class="btn-termina-sincronizzato nascosto" id="btn-termina-tutti">Termina il test per tutti</button>
+    <button class="btn-nuova-sessione nascosto" id="btn-nuova-sessione">Nuova sessione (nuovo turno)</button>
+    <p class="stato-avvio nascosto" id="stato-avvio">Il test è stato avviato per tutti gli studenti in attesa.</p>
+    <p class="stato-avvio nascosto" id="stato-termine">Il test è stato terminato per tutti. Avvia una nuova sessione per un nuovo turno.</p>
   </div>
 </div>
 
@@ -287,12 +317,13 @@ fetch(URL_SCRIPT_GOOGLE + "?azione=getTestAttivo")
       aggiornaStatistiche();
       pollingStatistiche = setInterval(aggiornaStatistiche, 4000);
 
-      // Se il test è già stato avviato (es. pagina ricaricata dopo il via)
-      fetch(URL_SCRIPT_GOOGLE + "?azione=statoAvvio&idTest=" + encodeURIComponent(ID_TEST_ATTIVO))
-        .then(r => r.json())
-        .then(stato => {
-          if (stato.avviato) mostraTestAvviato();
-        });
+      // Ripristina lo stato corretto dei pulsanti se la pagina viene
+      // ricaricata mentre un test è già stato avviato o già terminato.
+      if (risultato.test.terminatoTimestamp) {
+        mostraTestTerminato();
+      } else if (risultato.test.avviatoTimestamp) {
+        mostraTestAvviato();
+      }
     }
   })
   .catch(() => {
@@ -313,6 +344,9 @@ function aggiornaStatistiche() {
     .catch(() => {});
 }
 
+// ============================================================
+// AVVIA IL TEST PER TUTTI
+// ============================================================
 document.getElementById("btn-avvia-tutti").addEventListener("click", () => {
   if (!confirm("Avviare il test per tutti gli studenti attualmente in attesa? L'operazione non può essere annullata.")) return;
 
@@ -334,11 +368,88 @@ document.getElementById("btn-avvia-tutti").addEventListener("click", () => {
 });
 
 function mostraTestAvviato() {
-  const bottone = document.getElementById("btn-avvia-tutti");
-  bottone.disabled = true;
-  bottone.textContent = "Test avviato";
-  document.getElementById("stato-avvio").style.display = "block";
+  const bottoneAvvia = document.getElementById("btn-avvia-tutti");
+  bottoneAvvia.disabled = true;
+  bottoneAvvia.textContent = "Test avviato";
+  document.getElementById("stato-avvio").classList.remove("nascosto");
+  document.getElementById("btn-termina-tutti").classList.remove("nascosto");
 }
+
+// ============================================================
+// TERMINA IL TEST PER TUTTI
+// ============================================================
+document.getElementById("btn-termina-tutti").addEventListener("click", () => {
+  if (!confirm("Terminare il test per tutti gli studenti? Chi sta ancora rispondendo verrà inviato automaticamente con le risposte date fino a questo momento. L'operazione non può essere annullata.")) return;
+
+  const bottone = document.getElementById("btn-termina-tutti");
+  bottone.disabled = true;
+  bottone.textContent = "Chiusura in corso...";
+
+  fetch(URL_SCRIPT_GOOGLE, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify({ azione: "terminaSincronizzato", idTest: ID_TEST_ATTIVO })
+  })
+  .then(() => mostraTestTerminato())
+  .catch(() => {
+    bottone.disabled = false;
+    bottone.textContent = "Termina il test per tutti";
+  });
+});
+
+function mostraTestTerminato() {
+  document.getElementById("btn-avvia-tutti").disabled = true;
+  document.getElementById("btn-avvia-tutti").textContent = "Test avviato";
+  document.getElementById("stato-avvio").classList.add("nascosto");
+
+  const bottoneTermina = document.getElementById("btn-termina-tutti");
+  bottoneTermina.classList.remove("nascosto");
+  bottoneTermina.disabled = true;
+  bottoneTermina.textContent = "Test terminato";
+
+  document.getElementById("stato-termine").classList.remove("nascosto");
+  document.getElementById("btn-nuova-sessione").classList.remove("nascosto");
+}
+
+// ============================================================
+// NUOVA SESSIONE (nuovo turno dello stesso test)
+// ============================================================
+document.getElementById("btn-nuova-sessione").addEventListener("click", () => {
+  if (!confirm("Avviare una nuova sessione? La sala d'attesa e i contatori ripartiranno da zero. I risultati già raccolti in questo e nei precedenti turni restano salvati nel foglio.")) return;
+
+  const bottone = document.getElementById("btn-nuova-sessione");
+  bottone.disabled = true;
+  bottone.textContent = "Preparazione in corso...";
+
+  fetch(URL_SCRIPT_GOOGLE, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify({ azione: "nuovaSessione", idTest: ID_TEST_ATTIVO })
+  })
+  .then(() => {
+    // Ripristina la locandina allo stato iniziale, pronta per un nuovo turno
+    document.getElementById("btn-avvia-tutti").disabled = false;
+    document.getElementById("btn-avvia-tutti").textContent = "Avvia il test per tutti";
+    document.getElementById("stato-avvio").classList.add("nascosto");
+
+    document.getElementById("btn-termina-tutti").classList.add("nascosto");
+    document.getElementById("btn-termina-tutti").disabled = false;
+    document.getElementById("btn-termina-tutti").textContent = "Termina il test per tutti";
+
+    document.getElementById("stato-termine").classList.add("nascosto");
+    bottone.classList.add("nascosto");
+    bottone.disabled = false;
+    bottone.textContent = "Nuova sessione (nuovo turno)";
+
+    aggiornaStatistiche();
+  })
+  .catch(() => {
+    bottone.disabled = false;
+    bottone.textContent = "Nuova sessione (nuovo turno)";
+  });
+});
 </script>
 
 </body>

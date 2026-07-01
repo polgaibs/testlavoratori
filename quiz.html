@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- REV. 12 — 1 luglio 2026 (sala d'attesa e avvio sincronizzato per test con timer) -->
+<!-- REV. 13 — 1 luglio 2026 (invio automatico se il docente termina il test per tutti) -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -558,6 +558,7 @@ function avviaOppureRiprendi(secondiForzati) {
   if (DURATA_MINUTI > 0) {
     document.getElementById("timer").classList.remove("nascosto");
     avviaTimer();
+    avviaControlloTerminazioneForzata();
   } else {
     document.getElementById("timer").classList.add("nascosto");
   }
@@ -609,9 +610,35 @@ function avviaTimer() {
     if (secondiRimasti % 5 === 0) salvaStato();
     if (secondiRimasti <= 0) {
       clearInterval(timerInterval);
+      clearInterval(pollingTerminazioneInterval);
       inviaTest(true);
     }
   }, 1000);
+}
+
+let pollingTerminazioneInterval = null;
+
+// Durante lo svolgimento, controlla periodicamente se il docente ha
+// forzato la chiusura del test dalla locandina ("Termina per tutti").
+// In quel caso, invia automaticamente le risposte date fino a quel
+// momento, esattamente come succede allo scadere naturale del timer.
+function avviaControlloTerminazioneForzata() {
+  pollingTerminazioneInterval = setInterval(() => {
+    if (testInviato) {
+      clearInterval(pollingTerminazioneInterval);
+      return;
+    }
+    fetch(URL_SCRIPT_GOOGLE + "?azione=statoAvvio&idTest=" + encodeURIComponent(ID_TEST))
+      .then(r => r.json())
+      .then(risultato => {
+        if (risultato.terminato) {
+          clearInterval(timerInterval);
+          clearInterval(pollingTerminazioneInterval);
+          inviaTest(true);
+        }
+      })
+      .catch(() => {});
+  }, 4000);
 }
 
 function aggiornaDisplayTimer() {
