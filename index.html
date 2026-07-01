@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- REV. 7 — 1 luglio 2026 (multi-test dinamico via pannello admin) -->
+<!-- REV. 8 — 1 luglio 2026 (fix confronto PIN come stringa) -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -400,7 +400,7 @@ document.getElementById("btn-inizia").addEventListener("click", () => {
     erroreEl.style.display = "block";
     return;
   }
-  if (pinInserito !== PIN_CORRETTO) {
+  if (pinInserito !== String(PIN_CORRETTO).trim()) {
     erroreEl.textContent = "PIN non corretto. Chiedi conferma al responsabile in aula.";
     erroreEl.style.display = "block";
     return;
