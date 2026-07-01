@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- REV. 5 — 1 luglio 2026 (rimossi medaglioni e stemmi laterali) -->
+<!-- REV. 6 — 1 luglio 2026 (pulsante avvio sincronizzato + statistiche live) -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -12,6 +12,8 @@
     --blu-scuro: #0f1e30;
     --oro: #c9a04a;
     --bianco: #ffffff;
+    --verde: #2a9d8f;
+    --rosso: #e63946;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
@@ -29,17 +31,17 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 4vh 4vw;
+    padding: 3vh 4vw;
   }
   .stemma {
-    height: 18vh;
-    max-height: 220px;
+    height: 14vh;
+    max-height: 170px;
     width: auto;
-    margin-bottom: 3vh;
+    margin-bottom: 2vh;
     filter: drop-shadow(0 6px 18px rgba(0,0,0,0.4));
   }
   h1 {
-    font-size: clamp(2rem, 4.2vw, 3.6rem);
+    font-size: clamp(1.7rem, 3.6vw, 3rem);
     font-weight: 700;
     letter-spacing: 0.5px;
     margin-bottom: 0.4em;
@@ -52,15 +54,15 @@
     margin-top: 0.3em;
   }
   .linea-oro {
-    width: 140px;
+    width: 120px;
     height: 3px;
     background: var(--oro);
-    margin: 2vh auto 3vh;
+    margin: 1.5vh auto 2.5vh;
     border-radius: 2px;
   }
   .riquadro-qr {
     background: var(--bianco);
-    padding: 24px;
+    padding: 18px;
     border-radius: 20px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.5);
     display: inline-block;
@@ -71,28 +73,90 @@
     justify-content: center;
   }
   #qrcode img, #qrcode canvas {
-    width: clamp(200px, 24vh, 340px) !important;
-    height: clamp(200px, 24vh, 340px) !important;
+    width: clamp(160px, 19vh, 270px) !important;
+    height: clamp(160px, 19vh, 270px) !important;
   }
   .istruzione {
-    margin-top: 3vh;
-    font-size: clamp(1.1rem, 1.8vw, 1.6rem);
+    margin-top: 2vh;
+    font-size: clamp(0.95rem, 1.5vw, 1.35rem);
     font-weight: 600;
     color: var(--bianco);
     max-width: 700px;
   }
   .istruzione-secondaria {
-    margin-top: 1vh;
-    font-size: clamp(0.9rem, 1.3vw, 1.15rem);
+    margin-top: 0.8vh;
+    font-size: clamp(0.8rem, 1.1vw, 1rem);
     color: rgba(255,255,255,0.7);
     font-weight: 400;
   }
   .link-testuale {
-    margin-top: 2.5vh;
-    font-size: clamp(0.85rem, 1.1vw, 1.1rem);
+    margin-top: 1.5vh;
+    font-size: clamp(0.75rem, 1vw, 0.95rem);
     color: var(--oro);
     letter-spacing: 0.5px;
     word-break: break-all;
+  }
+
+  /* Pannello di controllo docente (solo per test con timer) */
+  .pannello-controllo {
+    margin-top: 3vh;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 780px;
+  }
+  .pannello-controllo.visibile { display: flex; }
+
+  .contatori {
+    display: flex;
+    gap: clamp(10px, 2.2vw, 26px);
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 2.2vh;
+  }
+  .contatore {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(201,160,74,0.4);
+    border-radius: 14px;
+    padding: 14px 18px;
+    min-width: 110px;
+    text-align: center;
+  }
+  .contatore .icona { font-size: clamp(1.3rem, 2.4vw, 1.9rem); }
+  .contatore .numero {
+    font-size: clamp(1.4rem, 2.6vw, 2.1rem);
+    font-weight: 700;
+    color: var(--oro);
+    display: block;
+    margin: 2px 0;
+  }
+  .contatore .etichetta {
+    font-size: clamp(0.65rem, 1vw, 0.85rem);
+    color: rgba(255,255,255,0.75);
+  }
+
+  .btn-avvia-sincronizzato {
+    background: var(--verde);
+    color: white;
+    border: none;
+    padding: 16px 36px;
+    font-size: clamp(1rem, 1.6vw, 1.25rem);
+    font-weight: 700;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  }
+  .btn-avvia-sincronizzato:hover { background: #238a7e; }
+  .btn-avvia-sincronizzato:disabled {
+    background: #666;
+    cursor: default;
+  }
+  .stato-avvio {
+    margin-top: 1.2vh;
+    font-size: clamp(0.85rem, 1.2vw, 1.05rem);
+    color: var(--oro);
+    font-weight: 600;
   }
 </style>
 </head>
@@ -114,17 +178,114 @@
   <p class="istruzione">Inquadra il codice QR con la fotocamera del telefono per accedere al test</p>
   <p class="istruzione-secondaria">Tieni pronto il PIN che ti verrà comunicato prima dell'avvio</p>
   <p class="link-testuale">polgaibs.github.io/testlavoratori/quiz.html</p>
+
+  <!-- Pannello di controllo: compare solo se il test attivo ha un timer -->
+  <div class="pannello-controllo" id="pannello-controllo">
+    <div class="contatori">
+      <div class="contatore">
+        <div class="icona">🙋</div>
+        <span class="numero" id="numero-connessi">0</span>
+        <div class="etichetta">Connessi</div>
+      </div>
+      <div class="contatore">
+        <div class="icona">⏳</div>
+        <span class="numero" id="numero-mancanti">0</span>
+        <div class="etichetta">Mancanti</div>
+      </div>
+      <div class="contatore">
+        <div class="icona">✍️</div>
+        <span class="numero" id="numero-svolgimento">0</span>
+        <div class="etichetta">In svolgimento</div>
+      </div>
+      <div class="contatore">
+        <div class="icona">✅</div>
+        <span class="numero" id="numero-completati">0</span>
+        <div class="etichetta">Completati</div>
+      </div>
+    </div>
+
+    <button class="btn-avvia-sincronizzato" id="btn-avvia-tutti">Avvia il test per tutti</button>
+    <p class="stato-avvio nascosto" id="stato-avvio" style="display:none;">Il test è stato avviato per tutti gli studenti in attesa.</p>
+  </div>
 </div>
 
 <script>
-  new QRCode(document.getElementById("qrcode"), {
-    text: "https://polgaibs.github.io/testlavoratori/quiz.html",
-    width: 340,
-    height: 340,
-    colorDark: "#1d3557",
-    colorLight: "#ffffff",
-    correctLevel: QRCode.CorrectLevel.H
+const URL_SCRIPT_GOOGLE = "https://script.google.com/macros/s/AKfycbzRqKjmhU1wIsg6vOS1_bcwZOF3BNDEICvEL4kAv6-JFOR9p9LCYEn2NfFGDAzgY6c/exec";
+const URL_QUIZ = "https://polgaibs.github.io/testlavoratori/quiz.html";
+
+new QRCode(document.getElementById("qrcode"), {
+  text: URL_QUIZ,
+  width: 340,
+  height: 340,
+  colorDark: "#1d3557",
+  colorLight: "#ffffff",
+  correctLevel: QRCode.CorrectLevel.H
+});
+
+let ID_TEST_ATTIVO = "";
+let TEST_HA_TIMER = false;
+let pollingStatistiche = null;
+
+fetch(URL_SCRIPT_GOOGLE + "?azione=getTestAttivo")
+  .then(risposta => risposta.json())
+  .then(risultato => {
+    if (risultato.esito !== "ok") return;
+    ID_TEST_ATTIVO = risultato.test.id;
+    TEST_HA_TIMER = risultato.test.durataMinuti > 0;
+
+    if (TEST_HA_TIMER) {
+      document.getElementById("pannello-controllo").classList.add("visibile");
+      aggiornaStatistiche();
+      pollingStatistiche = setInterval(aggiornaStatistiche, 4000);
+
+      // Se il test è già stato avviato (es. pagina ricaricata dopo il via)
+      fetch(URL_SCRIPT_GOOGLE + "?azione=statoAvvio&idTest=" + encodeURIComponent(ID_TEST_ATTIVO))
+        .then(r => r.json())
+        .then(stato => {
+          if (stato.avviato) mostraTestAvviato();
+        });
+    }
+  })
+  .catch(() => {});
+
+function aggiornaStatistiche() {
+  fetch(URL_SCRIPT_GOOGLE + "?azione=statistiche&idTest=" + encodeURIComponent(ID_TEST_ATTIVO))
+    .then(r => r.json())
+    .then(dati => {
+      document.getElementById("numero-connessi").textContent = dati.connessi;
+      document.getElementById("numero-mancanti").textContent = dati.mancanti;
+      document.getElementById("numero-svolgimento").textContent = dati.inSvolgimento;
+      document.getElementById("numero-completati").textContent = dati.completati;
+    })
+    .catch(() => {});
+}
+
+document.getElementById("btn-avvia-tutti").addEventListener("click", () => {
+  if (!confirm("Avviare il test per tutti gli studenti attualmente in attesa? L'operazione non può essere annullata.")) return;
+
+  const bottone = document.getElementById("btn-avvia-tutti");
+  bottone.disabled = true;
+  bottone.textContent = "Avvio in corso...";
+
+  fetch(URL_SCRIPT_GOOGLE, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify({ azione: "avviaSincronizzato", idTest: ID_TEST_ATTIVO })
+  })
+  .then(() => mostraTestAvviato())
+  .catch(() => {
+    bottone.disabled = false;
+    bottone.textContent = "Avvia il test per tutti";
   });
+});
+
+function mostraTestAvviato() {
+  const bottone = document.getElementById("btn-avvia-tutti");
+  bottone.disabled = true;
+  bottone.textContent = "Test avviato";
+  document.getElementById("stato-avvio").style.display = "block";
+}
 </script>
 
 </body>
