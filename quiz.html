@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- REV. 10 — 1 luglio 2026 (ancora piu' spazio tra i campi del form) -->
+<!-- REV. 12 — 1 luglio 2026 (sala d'attesa e avvio sincronizzato per test con timer) -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -223,15 +223,22 @@
   <!-- SCHERMATA 2: ISTRUZIONI -->
   <div class="scheda nascosto" id="schermata-istruzioni">
     <h2 style="color: var(--blu); margin-top:0;">Istruzioni</h2>
-    <p>Stai per iniziare il test. Avrai a disposizione <strong>20 minuti</strong> dal momento in cui premi "Avvia".</p>
-    <p>Il test contiene <strong>30 domande</strong> a risposta multipla. Puoi tornare indietro e cambiare le risposte già date in qualsiasi momento, finché non invii il test o non scade il tempo.</p>
-    <p>Allo scadere del tempo, il test verrà inviato automaticamente con le risposte date fino a quel momento.</p>
+    <p id="testo-durata">Stai per iniziare il test.</p>
+    <p>Il test contiene <strong id="testo-num-domande">domande</strong> a risposta multipla. Puoi tornare indietro e cambiare le risposte già date in qualsiasi momento, finché non invii il test<span id="testo-o-scade"> o non scade il tempo</span>.</p>
+    <p id="testo-scadenza">Allo scadere del tempo, il test verrà inviato automaticamente con le risposte date fino a quel momento.</p>
     <button id="btn-avvia">Avvia il test</button>
+  </div>
+
+  <!-- SCHERMATA 2B: SALA D'ATTESA (solo per test con timer) -->
+  <div class="scheda nascosto" id="schermata-attesa">
+    <h2 style="color: var(--blu); margin-top:0;">In attesa dell'avvio</h2>
+    <p>Sei pronto. Il test inizierà per tutti gli studenti nello stesso momento, quando il docente darà il via dalla postazione in aula.</p>
+    <p style="text-align:center; margin-top:24px; color: var(--blu-chiaro); font-weight:600;">Attendere prego...</p>
   </div>
 
   <!-- SCHERMATA 3: QUIZ -->
   <div class="nascosto" id="schermata-quiz">
-    <div class="timer" id="timer">20:00</div>
+    <div class="timer nascosto" id="timer">20:00</div>
     <div class="scheda">
       <div class="barra-progresso"><div class="barra-progresso-interna" id="barra-interna"></div></div>
       <div class="numero-domanda" id="numero-domanda"></div>
@@ -264,14 +271,15 @@
 // CONFIGURAZIONE
 // ============================================================
 const URL_SCRIPT_GOOGLE = "https://script.google.com/macros/s/AKfycbzRqKjmhU1wIsg6vOS1_bcwZOF3BNDEICvEL4kAv6-JFOR9p9LCYEn2NfFGDAzgY6c/exec";
-const DURATA_MINUTI = 20;
 
-// Queste tre variabili vengono popolate dinamicamente leggendo
+// Queste variabili vengono popolate dinamicamente leggendo
 // il test attivo dal foglio Google, invece che da file fissi.
+// DURATA_MINUTI = 0 significa "nessun limite di tempo" (timer disattivato).
 let PIN_CORRETTO = "";
 let DOMANDE = [];
 let STUDENTI = [];
 let ID_TEST = "";
+let DURATA_MINUTI = 20;
 
 // ============================================================
 // STATO
@@ -280,7 +288,7 @@ let nomeStudente = "";
 let domandeMischiate = [];
 let indiceCorrente = 0;
 let risposteDate = [];
-let secondiRimasti = DURATA_MINUTI * 60;
+let secondiRimasti = 0;
 let timerInterval = null;
 let testInviato = false;
 
@@ -301,6 +309,17 @@ fetch(URL_SCRIPT_GOOGLE + "?azione=getTestAttivo")
     DOMANDE = risultato.test.domande;
     STUDENTI = risultato.test.studenti;
     ID_TEST = risultato.test.id;
+    DURATA_MINUTI = risultato.test.durataMinuti || 0;
+
+    document.getElementById("testo-num-domande").textContent = DOMANDE.length + " domande";
+    if (DURATA_MINUTI > 0) {
+      document.getElementById("testo-durata").innerHTML = 'Stai per iniziare il test. Avrai a disposizione <strong>' + DURATA_MINUTI + ' minuti</strong> dal momento in cui premi "Avvia".';
+      document.getElementById("testo-scadenza").classList.remove("nascosto");
+    } else {
+      document.getElementById("testo-durata").textContent = "Stai per iniziare il test. Non c'è un limite di tempo per completarlo.";
+      document.getElementById("testo-o-scade").textContent = "";
+      document.getElementById("testo-scadenza").classList.add("nascosto");
+    }
 
     document.getElementById("schermata-caricamento").classList.add("nascosto");
     document.getElementById("schermata-id").classList.remove("nascosto");
@@ -448,17 +467,76 @@ document.getElementById("btn-inizia").addEventListener("click", () => {
 });
 
 // ============================================================
-// SCHERMATA 2 -> 3: AVVIO TEST (con recupero da salvataggio locale)
+// SCHERMATA 2 -> 2B o 3: AVVIO TEST
 // ============================================================
-document.getElementById("btn-avvia").addEventListener("click", avviaOppureRiprendi);
+let pollingAttesaInterval = null;
 
-function avviaOppureRiprendi() {
+document.getElementById("btn-avvia").addEventListener("click", () => {
+  const salvato = caricaSalvataggio();
+  const staGiaRiprendendo = salvato && salvato.nome === nomeStudente && !salvato.inviato;
+
+  // Se il test ha un timer ed è la prima volta che questo studente
+  // clicca "Avvia" (non sta riprendendo un tentativo interrotto),
+  // deve passare dalla sala d'attesa finché il docente non dà il via.
+  if (DURATA_MINUTI > 0 && !staGiaRiprendendo) {
+    document.getElementById("schermata-istruzioni").classList.add("nascosto");
+    document.getElementById("schermata-attesa").classList.remove("nascosto");
+
+    fetch(URL_SCRIPT_GOOGLE, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({ azione: "presenza", idTest: ID_TEST, nome: nomeStudente, stato: "attesa" })
+    }).catch(() => {});
+
+    avviaControlloAttesa();
+    return;
+  }
+
+  // Test senza timer, o studente che riprende un tentativo già iniziato:
+  // si parte (o si riprende) subito, come prima.
+  avviaOppureRiprendi();
+});
+
+function avviaControlloAttesa() {
+  controllaSeAvviato();
+  pollingAttesaInterval = setInterval(controllaSeAvviato, 3000);
+}
+
+function controllaSeAvviato() {
+  fetch(URL_SCRIPT_GOOGLE + "?azione=statoAvvio&idTest=" + encodeURIComponent(ID_TEST))
+    .then(risposta => risposta.json())
+    .then(risultato => {
+      if (risultato.avviato) {
+        clearInterval(pollingAttesaInterval);
+        fetch(URL_SCRIPT_GOOGLE, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify({ azione: "presenza", idTest: ID_TEST, nome: nomeStudente, stato: "in_corso" })
+        }).catch(() => {});
+
+        document.getElementById("schermata-attesa").classList.add("nascosto");
+
+        // Calcola il tempo residuo in base all'istante di avvio del
+        // docente (uguale per tutti), non al momento in cui questo
+        // dispositivo se n'è accorto, così tutti condividono la
+        // stessa scadenza reale.
+        const secondiTrascorsi = Math.floor((Date.now() - risultato.avviatoTimestamp) / 1000);
+        const secondiIniziali = Math.max(DURATA_MINUTI * 60 - secondiTrascorsi, 0);
+        avviaOppureRiprendi(secondiIniziali);
+      }
+    })
+    .catch(() => {});
+}
+
+function avviaOppureRiprendi(secondiForzati) {
   const salvato = caricaSalvataggio();
   if (salvato && salvato.nome === nomeStudente && !salvato.inviato) {
     domandeMischiate = salvato.domandeMischiate;
     indiceCorrente = salvato.indiceCorrente;
     risposteDate = salvato.risposteDate;
-    secondiRimasti = salvato.secondiRimasti;
+    secondiRimasti = secondiForzati !== undefined ? secondiForzati : salvato.secondiRimasti;
   } else {
     domandeMischiate = mischia(DOMANDE).map(d => {
       const opzioniConIndice = d.opzioni.map((testo, i) => ({ testo, corretta: i === d.corretta }));
@@ -470,14 +548,19 @@ function avviaOppureRiprendi() {
     });
     indiceCorrente = 0;
     risposteDate = new Array(domandeMischiate.length).fill(null);
-    secondiRimasti = DURATA_MINUTI * 60;
+    secondiRimasti = secondiForzati !== undefined ? secondiForzati : (DURATA_MINUTI > 0 ? DURATA_MINUTI * 60 : 0);
     salvaStato();
   }
 
   document.getElementById("schermata-istruzioni").classList.add("nascosto");
   document.getElementById("schermata-quiz").classList.remove("nascosto");
 
-  avviaTimer();
+  if (DURATA_MINUTI > 0) {
+    document.getElementById("timer").classList.remove("nascosto");
+    avviaTimer();
+  } else {
+    document.getElementById("timer").classList.add("nascosto");
+  }
   mostraDomanda();
 }
 
