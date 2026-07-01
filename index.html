@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- REV. 13 — 1 luglio 2026 (termina per tutti + nuova sessione/turno) -->
+<!-- REV. 14 — 1 luglio 2026 (pulsante rinominato in "Azzera timer") -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -268,9 +268,9 @@
 
     <button class="btn-avvia-sincronizzato" id="btn-avvia-tutti">Avvia il test per tutti</button>
     <button class="btn-termina-sincronizzato nascosto" id="btn-termina-tutti">Termina il test per tutti</button>
-    <button class="btn-nuova-sessione nascosto" id="btn-nuova-sessione">Nuova sessione (nuovo turno)</button>
+    <button class="btn-nuova-sessione nascosto" id="btn-nuova-sessione">Azzera timer</button>
     <p class="stato-avvio nascosto" id="stato-avvio">Il test è stato avviato per tutti gli studenti in attesa.</p>
-    <p class="stato-avvio nascosto" id="stato-termine">Il test è stato terminato per tutti. Avvia una nuova sessione per un nuovo turno.</p>
+    <p class="stato-avvio nascosto" id="stato-termine">Il test è stato terminato per tutti. Azzera il timer per avviare un nuovo turno.</p>
   </div>
 </div>
 
@@ -416,11 +416,11 @@ function mostraTestTerminato() {
 // NUOVA SESSIONE (nuovo turno dello stesso test)
 // ============================================================
 document.getElementById("btn-nuova-sessione").addEventListener("click", () => {
-  if (!confirm("Avviare una nuova sessione? La sala d'attesa e i contatori ripartiranno da zero. I risultati già raccolti in questo e nei precedenti turni restano salvati nel foglio.")) return;
+  if (!confirm("Azzerare il timer? Il pulsante \"Avvia il test per tutti\" tornerà disponibile e la sala d'attesa/i contatori ripartiranno da zero. I risultati già raccolti restano salvati nel foglio.")) return;
 
   const bottone = document.getElementById("btn-nuova-sessione");
   bottone.disabled = true;
-  bottone.textContent = "Preparazione in corso...";
+  bottone.textContent = "Azzeramento in corso...";
 
   fetch(URL_SCRIPT_GOOGLE, {
     method: "POST",
@@ -441,13 +441,13 @@ document.getElementById("btn-nuova-sessione").addEventListener("click", () => {
     document.getElementById("stato-termine").classList.add("nascosto");
     bottone.classList.add("nascosto");
     bottone.disabled = false;
-    bottone.textContent = "Nuova sessione (nuovo turno)";
+    bottone.textContent = "Azzera timer";
 
     aggiornaStatistiche();
   })
   .catch(() => {
     bottone.disabled = false;
-    bottone.textContent = "Nuova sessione (nuovo turno)";
+    bottone.textContent = "Azzera timer";
   });
 });
 </script>
