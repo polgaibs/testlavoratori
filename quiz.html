@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<!-- REV. 9 — 1 luglio 2026 (piu' spazio verticale nel form iniziale) -->
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test Scuola Pol.G.A.I. Brescia</title>
+<style>
+  :root {
+    --blu: #1d3557;
+    --blu-chiaro: #457b9d;
+    --rosso: #e63946;
+    --grigio-chiaro: #f1f1f1;
+    --verde: #2a9d8f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: var(--grigio-chiaro);
+    margin: 0;
+    padding: 0;
+    color: #1d1d1d;
+  }
+  .contenitore {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 24px 16px 60px 16px;
+  }
+  header {
+    text-align: center;
+    padding: 16px 16px;
+    background: var(--blu);
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 1.3rem;
+    flex: 1;
+    text-align: center;
+  }
+  .stemma {
+    height: 60px;
+    width: auto;
+    flex-shrink: 0;
+  }
+  .scheda {
+    background: white;
+    border-radius: 10px;
+    padding: 24px;
+    margin-top: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  label {
+    display: block;
+    margin-bottom: 8px;
+    margin-top: 22px;
+    font-weight: 600;
+    color: var(--blu);
+  }
+  label:first-of-type {
+    margin-top: 0;
+  }
+  input[type="text"], input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+  }
+  .autocomplete-wrapper {
+    position: relative;
+    margin-bottom: 6px;
+  }
+  .suggerimenti {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ccc;
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    max-height: 180px;
+    overflow-y: auto;
+    z-index: 10;
+    display: none;
+  }
+  .suggerimenti div {
+    padding: 10px 12px;
+    cursor: pointer;
+  }
+  .suggerimenti div:hover, .suggerimenti div.attivo {
+    background: var(--grigio-chiaro);
+  }
+  button {
+    background: var(--blu);
+    color: white;
+    border: none;
+    padding: 14px 20px;
+    font-size: 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 8px;
+  }
+  button:hover { background: var(--blu-chiaro); }
+  button:disabled { background: #aaa; cursor: not-allowed; }
+  .errore {
+    color: var(--rosso);
+    font-weight: 600;
+    margin-bottom: 12px;
+    display: none;
+  }
+  .nascosto { display: none !important; }
+  .timer {
+    position: sticky;
+    top: 0;
+    background: var(--blu);
+    color: white;
+    text-align: center;
+    padding: 10px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    z-index: 20;
+  }
+  .timer.allarme { background: var(--rosso); }
+  .barra-progresso {
+    height: 6px;
+    background: #ddd;
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 16px 0;
+  }
+  .barra-progresso-interna {
+    height: 100%;
+    background: var(--verde);
+    transition: width 0.3s;
+  }
+  .numero-domanda {
+    color: var(--blu-chiaro);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .testo-domanda {
+    font-size: 1.15rem;
+    margin-bottom: 20px;
+    line-height: 1.4;
+  }
+  .opzione {
+    display: block;
+    background: white;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .opzione:hover { border-color: var(--blu-chiaro); }
+  .opzione.selezionata {
+    border-color: var(--blu);
+    background: #eaf1f8;
+    font-weight: 600;
+  }
+  .opzione input { display: none; }
+  .navigazione {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+  }
+  .navigazione button { margin-top: 0; }
+  .btn-secondario {
+    background: white;
+    color: var(--blu);
+    border: 2px solid var(--blu) !important;
+  }
+  .btn-secondario:hover { background: var(--grigio-chiaro); }
+  .schermata-finale {
+    text-align: center;
+  }
+  .schermata-finale h2 { color: var(--verde); }
+  .invio-corso {
+    text-align: center;
+    padding: 40px 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <img src="stemma.png" alt="Stemma" class="stemma">
+  <h1>Scuola Pol.G.A.I. Brescia<br>Test di valutazione</h1>
+</header>
+
+<div class="contenitore">
+
+  <!-- SCHERMATA 0: CARICAMENTO -->
+  <div class="scheda" id="schermata-caricamento">
+    <p style="text-align:center;">Caricamento del test in corso...</p>
+  </div>
+
+  <!-- SCHERMATA ERRORE: NESSUN TEST ATTIVO -->
+  <div class="scheda nascosto" id="schermata-nessun-test">
+    <p class="errore" style="display:block;">Al momento non risulta nessun test attivo. Rivolgiti al responsabile in aula.</p>
+  </div>
+
+  <!-- SCHERMATA 1: IDENTIFICAZIONE -->
+  <div class="scheda nascosto" id="schermata-id">
+    <p class="errore" id="errore-id"></p>
+    <label for="campo-nome">Cognome e Nome</label>
+    <div class="autocomplete-wrapper">
+      <input type="text" id="campo-nome" placeholder="Inizia a digitare..." autocomplete="off">
+      <div class="suggerimenti" id="lista-suggerimenti"></div>
+    </div>
+    <label for="campo-pin">Codice PIN (fornito in aula)</label>
+    <input type="password" id="campo-pin" placeholder="Inserisci il PIN" inputmode="numeric">
+    <button id="btn-inizia">Inizia il test</button>
+  </div>
+
+  <!-- SCHERMATA 2: ISTRUZIONI -->
+  <div class="scheda nascosto" id="schermata-istruzioni">
+    <h2 style="color: var(--blu); margin-top:0;">Istruzioni</h2>
+    <p>Stai per iniziare il test. Avrai a disposizione <strong>20 minuti</strong> dal momento in cui premi "Avvia".</p>
+    <p>Il test contiene <strong>30 domande</strong> a risposta multipla. Puoi tornare indietro e cambiare le risposte già date in qualsiasi momento, finché non invii il test o non scade il tempo.</p>
+    <p>Allo scadere del tempo, il test verrà inviato automaticamente con le risposte date fino a quel momento.</p>
+    <button id="btn-avvia">Avvia il test</button>
+  </div>
+
+  <!-- SCHERMATA 3: QUIZ -->
+  <div class="nascosto" id="schermata-quiz">
+    <div class="timer" id="timer">20:00</div>
+    <div class="scheda">
+      <div class="barra-progresso"><div class="barra-progresso-interna" id="barra-interna"></div></div>
+      <div class="numero-domanda" id="numero-domanda"></div>
+      <div class="testo-domanda" id="testo-domanda"></div>
+      <div id="contenitore-opzioni"></div>
+      <p class="errore" id="errore-risposta-obbligatoria">Devi selezionare una risposta prima di continuare.</p>
+      <div class="navigazione">
+        <button class="btn-secondario" id="btn-indietro">Indietro</button>
+        <button id="btn-avanti">Avanti</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCHERMATA 4: INVIO IN CORSO -->
+  <div class="scheda nascosto invio-corso" id="schermata-invio">
+    <p>Invio del test in corso, attendere...</p>
+  </div>
+
+  <!-- SCHERMATA 5: FINE -->
+  <div class="scheda nascosto schermata-finale" id="schermata-fine">
+    <h2>Test completato</h2>
+    <p>Le tue risposte sono state inviate correttamente.</p>
+    <p>Puoi chiudere questa pagina.</p>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// CONFIGURAZIONE
+// ============================================================
+const URL_SCRIPT_GOOGLE = "https://script.google.com/macros/s/AKfycbzRqKjmhU1wIsg6vOS1_bcwZOF3BNDEICvEL4kAv6-JFOR9p9LCYEn2NfFGDAzgY6c/exec";
+const DURATA_MINUTI = 20;
+
+// Queste tre variabili vengono popolate dinamicamente leggendo
+// il test attivo dal foglio Google, invece che da file fissi.
+let PIN_CORRETTO = "";
+let DOMANDE = [];
+let STUDENTI = [];
+let ID_TEST = "";
+
+// ============================================================
+// STATO
+// ============================================================
+let nomeStudente = "";
+let domandeMischiate = [];
+let indiceCorrente = 0;
+let risposteDate = [];
+let secondiRimasti = DURATA_MINUTI * 60;
+let timerInterval = null;
+let testInviato = false;
+
+const CHIAVE_SALVATAGGIO = "test_silp_stato";
+
+// ============================================================
+// CARICAMENTO DEL TEST ATTIVO
+// ============================================================
+fetch(URL_SCRIPT_GOOGLE + "?azione=getTestAttivo")
+  .then(risposta => risposta.json())
+  .then(risultato => {
+    if (risultato.esito !== "ok") {
+      document.getElementById("schermata-caricamento").classList.add("nascosto");
+      document.getElementById("schermata-nessun-test").classList.remove("nascosto");
+      return;
+    }
+    PIN_CORRETTO = risultato.test.pin;
+    DOMANDE = risultato.test.domande;
+    STUDENTI = risultato.test.studenti;
+    ID_TEST = risultato.test.id;
+
+    document.getElementById("schermata-caricamento").classList.add("nascosto");
+    document.getElementById("schermata-id").classList.remove("nascosto");
+  })
+  .catch(() => {
+    document.getElementById("schermata-caricamento").classList.add("nascosto");
+    document.getElementById("schermata-nessun-test").classList.remove("nascosto");
+  });
+
+// ============================================================
+// UTILITY
+// ============================================================
+function mischia(array) {
+  const copia = [...array];
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copia[i], copia[j]] = [copia[j], copia[i]];
+  }
+  return copia;
+}
+
+function normalizza(testo) {
+  return testo.trim().toLowerCase();
+}
+
+// ============================================================
+// SCHERMATA 1: AUTOCOMPLETAMENTO NOME
+// ============================================================
+const campoNome = document.getElementById("campo-nome");
+const listaSuggerimenti = document.getElementById("lista-suggerimenti");
+let indiceAttivo = -1;
+
+campoNome.addEventListener("input", () => {
+  const valore = normalizza(campoNome.value);
+  listaSuggerimenti.innerHTML = "";
+  indiceAttivo = -1;
+  if (valore.length < 2) {
+    listaSuggerimenti.style.display = "none";
+    return;
+  }
+  const corrispondenze = STUDENTI.filter(nome => normalizza(nome).includes(valore)).slice(0, 8);
+  if (corrispondenze.length === 0) {
+    listaSuggerimenti.style.display = "none";
+    return;
+  }
+  corrispondenze.forEach(nome => {
+    const voce = document.createElement("div");
+    voce.textContent = nome;
+    voce.addEventListener("click", () => {
+      campoNome.value = nome;
+      listaSuggerimenti.style.display = "none";
+    });
+    listaSuggerimenti.appendChild(voce);
+  });
+  listaSuggerimenti.style.display = "block";
+});
+
+campoNome.addEventListener("keydown", (e) => {
+  const voci = listaSuggerimenti.querySelectorAll("div");
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    indiceAttivo = Math.min(indiceAttivo + 1, voci.length - 1);
+    aggiornaAttivo(voci);
+  } else if (e.key === "ArrowUp") {
+    e.preventDefault();
+    indiceAttivo = Math.max(indiceAttivo - 1, 0);
+    aggiornaAttivo(voci);
+  } else if (e.key === "Enter" && indiceAttivo >= 0) {
+    e.preventDefault();
+    voci[indiceAttivo].click();
+  }
+});
+
+function aggiornaAttivo(voci) {
+  voci.forEach(v => v.classList.remove("attivo"));
+  if (voci[indiceAttivo]) {
+    voci[indiceAttivo].classList.add("attivo");
+    voci[indiceAttivo].scrollIntoView({ block: "nearest" });
+  }
+}
+
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".autocomplete-wrapper")) {
+    listaSuggerimenti.style.display = "none";
+  }
+});
+
+// ============================================================
+// SCHERMATA 1 -> 2: VALIDAZIONE NOME + PIN
+// ============================================================
+document.getElementById("btn-inizia").addEventListener("click", () => {
+  const nomeInserito = campoNome.value.trim();
+  const pinInserito = document.getElementById("campo-pin").value.trim();
+  const erroreEl = document.getElementById("errore-id");
+  const bottoneInizia = document.getElementById("btn-inizia");
+
+  const nomeValido = STUDENTI.some(n => normalizza(n) === normalizza(nomeInserito));
+
+  if (!nomeValido) {
+    erroreEl.textContent = "Nome non trovato nell'elenco. Seleziona il tuo nome dai suggerimenti.";
+    erroreEl.style.display = "block";
+    return;
+  }
+  if (pinInserito !== String(PIN_CORRETTO).trim()) {
+    erroreEl.textContent = "PIN non corretto. Chiedi conferma al responsabile in aula.";
+    erroreEl.style.display = "block";
+    return;
+  }
+
+  erroreEl.style.display = "none";
+  bottoneInizia.disabled = true;
+  bottoneInizia.textContent = "Verifica in corso...";
+
+  // Controllo se questo nominativo ha già completato il test,
+  // interrogando lo script Google in lettura prima di procedere.
+  const urlControllo = URL_SCRIPT_GOOGLE + "?azione=controllaNome&nome=" + encodeURIComponent(nomeInserito) + "&idTest=" + encodeURIComponent(ID_TEST);
+
+  fetch(urlControllo)
+    .then(risposta => risposta.json())
+    .then(risultato => {
+      bottoneInizia.disabled = false;
+      bottoneInizia.textContent = "Inizia il test";
+
+      if (risultato.giaPresente) {
+        erroreEl.textContent = "Risulta che questo nominativo ha già completato il test in precedenza. Non è possibile ripeterlo. Se ritieni si tratti di un errore, rivolgiti al responsabile in aula.";
+        erroreEl.style.display = "block";
+        return;
+      }
+
+      nomeStudente = nomeInserito;
+      document.getElementById("schermata-id").classList.add("nascosto");
+      document.getElementById("schermata-istruzioni").classList.remove("nascosto");
+    })
+    .catch(() => {
+      // Se il controllo fallisce per problemi di rete, lasciamo comunque
+      // procedere lo studente: il blocco definitivo avviene comunque lato
+      // Google al momento dell'invio finale, questo controllo è solo
+      // un avviso preventivo in più.
+      bottoneInizia.disabled = false;
+      bottoneInizia.textContent = "Inizia il test";
+      nomeStudente = nomeInserito;
+      document.getElementById("schermata-id").classList.add("nascosto");
+      document.getElementById("schermata-istruzioni").classList.remove("nascosto");
+    });
+});
+
+// ============================================================
+// SCHERMATA 2 -> 3: AVVIO TEST (con recupero da salvataggio locale)
+// ============================================================
+document.getElementById("btn-avvia").addEventListener("click", avviaOppureRiprendi);
+
+function avviaOppureRiprendi() {
+  const salvato = caricaSalvataggio();
+  if (salvato && salvato.nome === nomeStudente && !salvato.inviato) {
+    domandeMischiate = salvato.domandeMischiate;
+    indiceCorrente = salvato.indiceCorrente;
+    risposteDate = salvato.risposteDate;
+    secondiRimasti = salvato.secondiRimasti;
+  } else {
+    domandeMischiate = mischia(DOMANDE).map(d => {
+      const opzioniConIndice = d.opzioni.map((testo, i) => ({ testo, corretta: i === d.corretta }));
+      return {
+        id: d.id,
+        testo: d.testo,
+        opzioni: mischia(opzioniConIndice)
+      };
+    });
+    indiceCorrente = 0;
+    risposteDate = new Array(domandeMischiate.length).fill(null);
+    secondiRimasti = DURATA_MINUTI * 60;
+    salvaStato();
+  }
+
+  document.getElementById("schermata-istruzioni").classList.add("nascosto");
+  document.getElementById("schermata-quiz").classList.remove("nascosto");
+
+  avviaTimer();
+  mostraDomanda();
+}
+
+// ============================================================
+// SALVATAGGIO LOCALE
+// ============================================================
+function salvaStato() {
+  const stato = {
+    nome: nomeStudente,
+    domandeMischiate,
+    indiceCorrente,
+    risposteDate,
+    secondiRimasti,
+    inviato: testInviato
+  };
+  try {
+    localStorage.setItem(CHIAVE_SALVATAGGIO, JSON.stringify(stato));
+  } catch (e) {
+    console.error("Impossibile salvare lo stato locale", e);
+  }
+}
+
+function caricaSalvataggio() {
+  try {
+    const dato = localStorage.getItem(CHIAVE_SALVATAGGIO);
+    return dato ? JSON.parse(dato) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function cancellaSalvataggio() {
+  try {
+    localStorage.removeItem(CHIAVE_SALVATAGGIO);
+  } catch (e) {}
+}
+
+// ============================================================
+// TIMER
+// ============================================================
+function avviaTimer() {
+  aggiornaDisplayTimer();
+  timerInterval = setInterval(() => {
+    secondiRimasti--;
+    aggiornaDisplayTimer();
+    if (secondiRimasti % 5 === 0) salvaStato();
+    if (secondiRimasti <= 0) {
+      clearInterval(timerInterval);
+      inviaTest(true);
+    }
+  }, 1000);
+}
+
+function aggiornaDisplayTimer() {
+  const el = document.getElementById("timer");
+  const minuti = Math.floor(secondiRimasti / 60);
+  const secondi = secondiRimasti % 60;
+  el.textContent = `${String(minuti).padStart(2,"0")}:${String(secondi).padStart(2,"0")}`;
+  if (secondiRimasti <= 120) {
+    el.classList.add("allarme");
+  }
+}
+
+// ============================================================
+// VISUALIZZAZIONE DOMANDE
+// ============================================================
+function mostraDomanda() {
+  const domanda = domandeMischiate[indiceCorrente];
+  document.getElementById("numero-domanda").textContent = `Domanda ${indiceCorrente + 1} di ${domandeMischiate.length}`;
+  document.getElementById("testo-domanda").textContent = domanda.testo;
+  document.getElementById("errore-risposta-obbligatoria").style.display = "none";
+
+  const percentuale = ((indiceCorrente) / domandeMischiate.length) * 100;
+  document.getElementById("barra-interna").style.width = percentuale + "%";
+
+  const contenitore = document.getElementById("contenitore-opzioni");
+  contenitore.innerHTML = "";
+
+  domanda.opzioni.forEach((opzione, i) => {
+    const div = document.createElement("div");
+    div.className = "opzione";
+    if (risposteDate[indiceCorrente] === i) div.classList.add("selezionata");
+    div.textContent = opzione.testo;
+    div.addEventListener("click", () => {
+      risposteDate[indiceCorrente] = i;
+      salvaStato();
+      mostraDomanda();
+    });
+    contenitore.appendChild(div);
+  });
+
+  document.getElementById("btn-indietro").disabled = indiceCorrente === 0;
+  document.getElementById("btn-avanti").textContent =
+    indiceCorrente === domandeMischiate.length - 1 ? "Termina e invia" : "Avanti";
+}
+
+document.getElementById("btn-indietro").addEventListener("click", () => {
+  if (indiceCorrente > 0) {
+    indiceCorrente--;
+    salvaStato();
+    mostraDomanda();
+  }
+});
+
+document.getElementById("btn-avanti").addEventListener("click", () => {
+  if (risposteDate[indiceCorrente] === null) {
+    document.getElementById("errore-risposta-obbligatoria").style.display = "block";
+    return;
+  }
+  if (indiceCorrente < domandeMischiate.length - 1) {
+    indiceCorrente++;
+    salvaStato();
+    mostraDomanda();
+  } else {
+    inviaTest(false);
+  }
+});
+
+// ============================================================
+// INVIO RISULTATI
+// ============================================================
+function inviaTest(perScadenzaTempo) {
+  if (testInviato) return;
+  testInviato = true;
+  clearInterval(timerInterval);
+
+  document.getElementById("schermata-quiz").classList.add("nascosto");
+  document.getElementById("schermata-invio").classList.remove("nascosto");
+
+  let punteggio = 0;
+  const dettaglio = domandeMischiate.map((domanda, i) => {
+    const indiceRisposta = risposteDate[i];
+    const rispostaTesto = indiceRisposta !== null ? domanda.opzioni[indiceRisposta].testo : "";
+    const corretta = indiceRisposta !== null && domanda.opzioni[indiceRisposta].corretta;
+    if (corretta) punteggio++;
+    return {
+      id: domanda.id,
+      testo: domanda.testo,
+      risposta: rispostaTesto,
+      corretta: corretta ? "SI" : "NO"
+    };
+  });
+
+  // Riordina le risposte secondo l'ordine originale delle domande (D1, D2, D3...)
+  // così nel foglio Google ogni domanda ha sempre la stessa colonna fissa.
+  const risposteOrdinate = DOMANDE.map(dOriginale => {
+    const trovata = dettaglio.find(d => d.id === dOriginale.id);
+    return trovata || { id: dOriginale.id, testo: dOriginale.testo, risposta: "", corretta: "NO" };
+  });
+
+  const payload = {
+    idTest: ID_TEST,
+    nome: nomeStudente,
+    timestamp: new Date().toLocaleString("it-IT"),
+    punteggio: punteggio,
+    totaleDomande: domandeMischiate.length,
+    scadutoPerTempo: perScadenzaTempo ? "SI" : "NO",
+    dettaglio: dettaglio,
+    risposteOrdinate: risposteOrdinate
+  };
+
+  fetch(URL_SCRIPT_GOOGLE, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify(payload)
+  })
+  .then(() => {
+    cancellaSalvataggio();
+    document.getElementById("schermata-invio").classList.add("nascosto");
+    document.getElementById("schermata-fine").classList.remove("nascosto");
+  })
+  .catch((errore) => {
+    console.error("Errore di invio", errore);
+    // Riprova automaticamente dopo 3 secondi, mantenendo i dati salvati
+    setTimeout(() => inviaTest(perScadenzaTempo), 3000);
+  });
+}
+
+// ============================================================
+// AVVISO USCITA ACCIDENTALE
+// ============================================================
+window.addEventListener("beforeunload", (e) => {
+  if (!testInviato && domandeMischiate.length > 0) {
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});
+</script>
+
+</body>
+</html>
