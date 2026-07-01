@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<!-- REV. 2 — 1 luglio 2026 (stemmi laterali aggiunti) -->
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test di valutazione — Scuola Pol.G.A.I. Brescia</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root {
+    --blu: #1d3557;
+    --blu-scuro: #0f1e30;
+    --oro: #c9a04a;
+    --bianco: #ffffff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: radial-gradient(circle at center, var(--blu) 0%, var(--blu-scuro) 100%);
+    color: var(--bianco);
+    overflow: hidden;
+  }
+  .palco {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 4vh 4vw;
+  }
+  .stemma {
+    height: 18vh;
+    max-height: 220px;
+    width: auto;
+    margin-bottom: 3vh;
+    filter: drop-shadow(0 6px 18px rgba(0,0,0,0.4));
+  }
+  h1 {
+    font-size: clamp(2rem, 4.2vw, 3.6rem);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.4em;
+  }
+  h1 span {
+    display: block;
+    font-size: 0.55em;
+    font-weight: 400;
+    color: var(--oro);
+    margin-top: 0.3em;
+  }
+  .linea-oro {
+    width: 140px;
+    height: 3px;
+    background: var(--oro);
+    margin: 2vh auto 3vh;
+    border-radius: 2px;
+  }
+  .riga-qr {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(20px, 4vw, 60px);
+  }
+  .stemma-laterale {
+    height: clamp(90px, 14vh, 180px);
+    width: auto;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.35));
+  }
+  .riquadro-qr {
+    background: var(--bianco);
+    padding: 24px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    display: inline-block;
+  }
+  #qrcode {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #qrcode img, #qrcode canvas {
+    width: clamp(200px, 24vh, 340px) !important;
+    height: clamp(200px, 24vh, 340px) !important;
+  }
+  .istruzione {
+    margin-top: 3vh;
+    font-size: clamp(1.1rem, 1.8vw, 1.6rem);
+    font-weight: 600;
+    color: var(--bianco);
+    max-width: 700px;
+  }
+  .istruzione-secondaria {
+    margin-top: 1vh;
+    font-size: clamp(0.9rem, 1.3vw, 1.15rem);
+    color: rgba(255,255,255,0.7);
+    font-weight: 400;
+  }
+  .link-testuale {
+    margin-top: 2.5vh;
+    font-size: clamp(0.85rem, 1.1vw, 1.1rem);
+    color: var(--oro);
+    letter-spacing: 0.5px;
+    word-break: break-all;
+  }
+</style>
+</head>
+<body>
+
+<div class="palco">
+  <img src="stemma.png" alt="Stemma" class="stemma">
+
+  <h1>Scuola Pol.G.A.I. Brescia
+    <span>Test di valutazione</span>
+  </h1>
+
+  <div class="linea-oro"></div>
+
+  <div class="riga-qr">
+    <img src="stemma_pg.png" alt="Stemma Polizia Giudiziaria" class="stemma-laterale">
+    <div class="riquadro-qr">
+      <div id="qrcode"></div>
+    </div>
+    <img src="stemma_ii.png" alt="Stemma Istituti di Istruzione" class="stemma-laterale">
+  </div>
+
+  <p class="istruzione">Inquadra il codice QR con la fotocamera del telefono per accedere al test</p>
+  <p class="istruzione-secondaria">Tieni pronto il PIN che ti verrà comunicato prima dell'avvio</p>
+  <p class="link-testuale">polgaibs.github.io/testlavoratori</p>
+</div>
+
+<script>
+  new QRCode(document.getElementById("qrcode"), {
+    text: "https://polgaibs.github.io/testlavoratori/",
+    width: 340,
+    height: 340,
+    colorDark: "#1d3557",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H
+  });
+</script>
+
+</body>
+</html>
