@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- REV. 14 — 1 luglio 2026 (pulsante rinominato in "Azzera timer") -->
+<!-- REV. 17 — 1 luglio 2026 (testo nessun test attivo aggiornato) -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -161,16 +161,26 @@
     color: rgba(255,255,255,0.75);
   }
 
+  .riga-pulsanti-controllo {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 1vh;
+  }
   .btn-avvia-sincronizzato {
     background: var(--verde);
     color: white;
     border: none;
-    padding: 16px 36px;
-    font-size: clamp(1rem, 1.6vw, 1.25rem);
+    padding: 14px 26px;
+    font-size: clamp(0.85rem, 1.3vw, 1.1rem);
     font-weight: 700;
     border-radius: 10px;
     cursor: pointer;
     box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    white-space: nowrap;
   }
   .btn-avvia-sincronizzato:hover { background: #238a7e; }
   .btn-avvia-sincronizzato:disabled {
@@ -181,13 +191,13 @@
     background: var(--rosso);
     color: white;
     border: none;
-    padding: 14px 30px;
-    font-size: clamp(0.9rem, 1.4vw, 1.1rem);
+    padding: 14px 26px;
+    font-size: clamp(0.85rem, 1.3vw, 1.1rem);
     font-weight: 700;
     border-radius: 10px;
     cursor: pointer;
     box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-    margin-top: 1.2vh;
+    white-space: nowrap;
   }
   .btn-termina-sincronizzato:hover { background: #c62d3a; }
   .btn-termina-sincronizzato:disabled { background: #666; cursor: default; }
@@ -195,13 +205,13 @@
     background: var(--oro);
     color: var(--blu-scuro);
     border: none;
-    padding: 14px 30px;
-    font-size: clamp(0.9rem, 1.4vw, 1.1rem);
+    padding: 14px 26px;
+    font-size: clamp(0.85rem, 1.3vw, 1.1rem);
     font-weight: 700;
     border-radius: 10px;
     cursor: pointer;
     box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-    margin-top: 1.2vh;
+    white-space: nowrap;
   }
   .btn-nuova-sessione:hover { background: #b8934a; }
   .stato-avvio {
@@ -227,7 +237,7 @@
 
   <div id="blocco-nessun-test" class="messaggio-nessun-test nascosto">
     <p>Al momento non risulta nessun test attivo.</p>
-    <p class="istruzione-secondaria">Attiva un test dal pannello admin per generare il QR code valido.</p>
+    <p class="istruzione-secondaria">Il test deve essere abilitato a cura dell'ufficio Studi.</p>
   </div>
 
   <div id="blocco-test-attivo" class="nascosto">
@@ -266,9 +276,11 @@
       </div>
     </div>
 
-    <button class="btn-avvia-sincronizzato" id="btn-avvia-tutti">Avvia il test per tutti</button>
-    <button class="btn-termina-sincronizzato nascosto" id="btn-termina-tutti">Termina il test per tutti</button>
-    <button class="btn-nuova-sessione nascosto" id="btn-nuova-sessione">Azzera timer</button>
+    <div class="riga-pulsanti-controllo">
+      <button class="btn-avvia-sincronizzato" id="btn-avvia-tutti">Avvia il test per tutti</button>
+      <button class="btn-termina-sincronizzato nascosto" id="btn-termina-tutti">Termina il test per tutti</button>
+      <button class="btn-nuova-sessione nascosto" id="btn-nuova-sessione">Azzera timer</button>
+    </div>
     <p class="stato-avvio nascosto" id="stato-avvio">Il test è stato avviato per tutti gli studenti in attesa.</p>
     <p class="stato-avvio nascosto" id="stato-termine">Il test è stato terminato per tutti. Azzera il timer per avviare un nuovo turno.</p>
   </div>
