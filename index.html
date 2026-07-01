@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- REV. 4 — 30 giugno 2026 -->
+<!-- REV. 5 — 1 luglio 2026 -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -28,13 +28,23 @@
   }
   header {
     text-align: center;
-    padding: 24px 16px;
+    padding: 16px 16px;
     background: var(--blu);
     color: white;
+    display: flex;
+    align-items: center;
+    gap: 16px;
   }
   header h1 {
     margin: 0;
     font-size: 1.3rem;
+    flex: 1;
+    text-align: center;
+  }
+  .stemma {
+    height: 60px;
+    width: auto;
+    flex-shrink: 0;
   }
   .scheda {
     background: white;
@@ -177,6 +187,7 @@
 <body>
 
 <header>
+  <img src="stemma.png" alt="Stemma" class="stemma">
   <h1>Scuola Pol.G.A.I. Brescia — Test di valutazione</h1>
 </header>
 
