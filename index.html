@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- REV. 5 — 1 luglio 2026 -->
+<!-- REV. 7 — 1 luglio 2026 (multi-test dinamico via pannello admin) -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -193,8 +193,18 @@
 
 <div class="contenitore">
 
+  <!-- SCHERMATA 0: CARICAMENTO -->
+  <div class="scheda" id="schermata-caricamento">
+    <p style="text-align:center;">Caricamento del test in corso...</p>
+  </div>
+
+  <!-- SCHERMATA ERRORE: NESSUN TEST ATTIVO -->
+  <div class="scheda nascosto" id="schermata-nessun-test">
+    <p class="errore" style="display:block;">Al momento non risulta nessun test attivo. Rivolgiti al responsabile in aula.</p>
+  </div>
+
   <!-- SCHERMATA 1: IDENTIFICAZIONE -->
-  <div class="scheda" id="schermata-id">
+  <div class="scheda nascosto" id="schermata-id">
     <p class="errore" id="errore-id"></p>
     <label for="campo-nome">Cognome e Nome</label>
     <div class="autocomplete-wrapper">
@@ -245,15 +255,19 @@
 
 </div>
 
-<script src="studenti.js"></script>
-<script src="domande.js"></script>
 <script>
 // ============================================================
 // CONFIGURAZIONE
 // ============================================================
-const PIN_CORRETTO = "1234"; // CAMBIA QUESTO PIN PRIMA DI OGNI SOMMINISTRAZIONE
-const DURATA_MINUTI = 20;
 const URL_SCRIPT_GOOGLE = "https://script.google.com/macros/s/AKfycbzRqKjmhU1wIsg6vOS1_bcwZOF3BNDEICvEL4kAv6-JFOR9p9LCYEn2NfFGDAzgY6c/exec";
+const DURATA_MINUTI = 20;
+
+// Queste tre variabili vengono popolate dinamicamente leggendo
+// il test attivo dal foglio Google, invece che da file fissi.
+let PIN_CORRETTO = "";
+let DOMANDE = [];
+let STUDENTI = [];
+let ID_TEST = "";
 
 // ============================================================
 // STATO
@@ -267,6 +281,30 @@ let timerInterval = null;
 let testInviato = false;
 
 const CHIAVE_SALVATAGGIO = "test_silp_stato";
+
+// ============================================================
+// CARICAMENTO DEL TEST ATTIVO
+// ============================================================
+fetch(URL_SCRIPT_GOOGLE + "?azione=getTestAttivo")
+  .then(risposta => risposta.json())
+  .then(risultato => {
+    if (risultato.esito !== "ok") {
+      document.getElementById("schermata-caricamento").classList.add("nascosto");
+      document.getElementById("schermata-nessun-test").classList.remove("nascosto");
+      return;
+    }
+    PIN_CORRETTO = risultato.test.pin;
+    DOMANDE = risultato.test.domande;
+    STUDENTI = risultato.test.studenti;
+    ID_TEST = risultato.test.id;
+
+    document.getElementById("schermata-caricamento").classList.add("nascosto");
+    document.getElementById("schermata-id").classList.remove("nascosto");
+  })
+  .catch(() => {
+    document.getElementById("schermata-caricamento").classList.add("nascosto");
+    document.getElementById("schermata-nessun-test").classList.remove("nascosto");
+  });
 
 // ============================================================
 // UTILITY
@@ -374,7 +412,7 @@ document.getElementById("btn-inizia").addEventListener("click", () => {
 
   // Controllo se questo nominativo ha già completato il test,
   // interrogando lo script Google in lettura prima di procedere.
-  const urlControllo = URL_SCRIPT_GOOGLE + "?azione=controllaNome&nome=" + encodeURIComponent(nomeInserito);
+  const urlControllo = URL_SCRIPT_GOOGLE + "?azione=controllaNome&nome=" + encodeURIComponent(nomeInserito) + "&idTest=" + encodeURIComponent(ID_TEST);
 
   fetch(urlControllo)
     .then(risposta => risposta.json())
@@ -587,6 +625,7 @@ function inviaTest(perScadenzaTempo) {
   });
 
   const payload = {
+    idTest: ID_TEST,
     nome: nomeStudente,
     timestamp: new Date().toLocaleString("it-IT"),
     punteggio: punteggio,
