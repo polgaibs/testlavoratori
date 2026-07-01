@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- REV. 13 — 1 luglio 2026 (invio automatico se il docente termina il test per tutti) -->
+<!-- REV. 14 — 1 luglio 2026 (ping periodico ogni 15s per connessione reale) -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -470,6 +470,31 @@ document.getElementById("btn-inizia").addEventListener("click", () => {
 // SCHERMATA 2 -> 2B o 3: AVVIO TEST
 // ============================================================
 let pollingAttesaInterval = null;
+let pingIntervalId = null;
+let statoPresenzaAttuale = null;
+
+// Manda un segnale periodico "sono ancora qui" mentre lo studente è
+// in sala d'attesa o sta svolgendo il test, così la locandina può
+// distinguere chi ha davvero il telefono aperto ora da chi si è solo
+// identificato in passato e poi ha chiuso la pagina.
+function inviaPing() {
+  if (testInviato) {
+    clearInterval(pingIntervalId);
+    return;
+  }
+  fetch(URL_SCRIPT_GOOGLE, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify({ azione: "presenza", idTest: ID_TEST, nome: nomeStudente, stato: statoPresenzaAttuale })
+  }).catch(() => {});
+}
+
+function avviaPing(statoIniziale) {
+  statoPresenzaAttuale = statoIniziale;
+  if (pingIntervalId) clearInterval(pingIntervalId);
+  pingIntervalId = setInterval(inviaPing, 15000);
+}
 
 document.getElementById("btn-avvia").addEventListener("click", () => {
   const salvato = caricaSalvataggio();
@@ -488,6 +513,7 @@ document.getElementById("btn-avvia").addEventListener("click", () => {
       headers: { "Content-Type": "text/plain" },
       body: JSON.stringify({ azione: "presenza", idTest: ID_TEST, nome: nomeStudente, stato: "attesa" })
     }).catch(() => {});
+    avviaPing("attesa");
 
     avviaControlloAttesa();
     return;
@@ -509,6 +535,7 @@ function controllaSeAvviato() {
     .then(risultato => {
       if (risultato.avviato) {
         clearInterval(pollingAttesaInterval);
+        statoPresenzaAttuale = "in_corso";
         fetch(URL_SCRIPT_GOOGLE, {
           method: "POST",
           mode: "no-cors",
