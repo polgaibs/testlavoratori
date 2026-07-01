@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- REV. 6 — 1 luglio 2026 (pulsante avvio sincronizzato + statistiche live) -->
+<!-- REV. 7 — 1 luglio 2026 (titolo test attivo + messaggio nessun test attivo) -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -96,6 +96,20 @@
     letter-spacing: 0.5px;
     word-break: break-all;
   }
+  .nascosto { display: none !important; }
+  .messaggio-nessun-test {
+    background: rgba(230,57,70,0.12);
+    border: 1px solid var(--rosso);
+    border-radius: 14px;
+    padding: 24px 32px;
+    max-width: 600px;
+  }
+  .messaggio-nessun-test p:first-child {
+    font-size: clamp(1.1rem, 2vw, 1.6rem);
+    font-weight: 700;
+    color: var(--bianco);
+    margin-bottom: 8px;
+  }
 
   /* Pannello di controllo docente (solo per test con timer) */
   .pannello-controllo {
@@ -166,18 +180,25 @@
   <img src="stemma.png" alt="Stemma" class="stemma">
 
   <h1>Scuola Pol.G.A.I. Brescia
-    <span>Test di valutazione</span>
+    <span id="sottotitolo-test">Test di valutazione</span>
   </h1>
 
   <div class="linea-oro"></div>
 
-  <div class="riquadro-qr">
-    <div id="qrcode"></div>
+  <div id="blocco-nessun-test" class="messaggio-nessun-test nascosto">
+    <p>Al momento non risulta nessun test attivo.</p>
+    <p class="istruzione-secondaria">Attiva un test dal pannello admin per generare il QR code valido.</p>
   </div>
 
-  <p class="istruzione">Inquadra il codice QR con la fotocamera del telefono per accedere al test</p>
-  <p class="istruzione-secondaria">Tieni pronto il PIN che ti verrà comunicato prima dell'avvio</p>
-  <p class="link-testuale">polgaibs.github.io/testlavoratori/quiz.html</p>
+  <div id="blocco-test-attivo">
+    <div class="riquadro-qr">
+      <div id="qrcode"></div>
+    </div>
+
+    <p class="istruzione">Inquadra il codice QR con la fotocamera del telefono per accedere al test</p>
+    <p class="istruzione-secondaria">Tieni pronto il PIN che ti verrà comunicato prima dell'avvio</p>
+    <p class="link-testuale">polgaibs.github.io/testlavoratori/quiz.html</p>
+  </div>
 
   <!-- Pannello di controllo: compare solo se il test attivo ha un timer -->
   <div class="pannello-controllo" id="pannello-controllo">
@@ -229,7 +250,15 @@ let pollingStatistiche = null;
 fetch(URL_SCRIPT_GOOGLE + "?azione=getTestAttivo")
   .then(risposta => risposta.json())
   .then(risultato => {
-    if (risultato.esito !== "ok") return;
+    if (risultato.esito !== "ok") {
+      document.getElementById("blocco-test-attivo").classList.add("nascosto");
+      document.getElementById("blocco-nessun-test").classList.remove("nascosto");
+      document.getElementById("sottotitolo-test").textContent = "Nessun test attivo";
+      return;
+    }
+
+    document.getElementById("sottotitolo-test").textContent = risultato.test.nome;
+
     ID_TEST_ATTIVO = risultato.test.id;
     TEST_HA_TIMER = risultato.test.durataMinuti > 0;
 
@@ -246,7 +275,11 @@ fetch(URL_SCRIPT_GOOGLE + "?azione=getTestAttivo")
         });
     }
   })
-  .catch(() => {});
+  .catch(() => {
+    document.getElementById("blocco-test-attivo").classList.add("nascosto");
+    document.getElementById("blocco-nessun-test").classList.remove("nascosto");
+    document.getElementById("sottotitolo-test").textContent = "Nessun test attivo";
+  });
 
 function aggiornaStatistiche() {
   fetch(URL_SCRIPT_GOOGLE + "?azione=statistiche&idTest=" + encodeURIComponent(ID_TEST_ATTIVO))
