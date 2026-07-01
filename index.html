@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- REV. 7 — 1 luglio 2026 (titolo test attivo + messaggio nessun test attivo) -->
+<!-- REV. 9 — 1 luglio 2026 (stemma con animazione pulsante) -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -39,6 +39,17 @@
     width: auto;
     margin-bottom: 2vh;
     filter: drop-shadow(0 6px 18px rgba(0,0,0,0.4));
+    animation: pulsaStemma 2.6s ease-in-out infinite;
+  }
+  @keyframes pulsaStemma {
+    0%, 100% {
+      transform: scale(1);
+      filter: drop-shadow(0 6px 18px rgba(0,0,0,0.4));
+    }
+    50% {
+      transform: scale(1.06);
+      filter: drop-shadow(0 8px 26px rgba(201,160,74,0.55));
+    }
   }
   h1 {
     font-size: clamp(1.7rem, 3.6vw, 3rem);
@@ -185,12 +196,14 @@
 
   <div class="linea-oro"></div>
 
+  <div id="blocco-caricamento" class="istruzione-secondaria" style="margin-top:2vh;">Caricamento in corso...</div>
+
   <div id="blocco-nessun-test" class="messaggio-nessun-test nascosto">
     <p>Al momento non risulta nessun test attivo.</p>
     <p class="istruzione-secondaria">Attiva un test dal pannello admin per generare il QR code valido.</p>
   </div>
 
-  <div id="blocco-test-attivo">
+  <div id="blocco-test-attivo" class="nascosto">
     <div class="riquadro-qr">
       <div id="qrcode"></div>
     </div>
@@ -250,14 +263,16 @@ let pollingStatistiche = null;
 fetch(URL_SCRIPT_GOOGLE + "?azione=getTestAttivo")
   .then(risposta => risposta.json())
   .then(risultato => {
+    document.getElementById("blocco-caricamento").classList.add("nascosto");
+
     if (risultato.esito !== "ok") {
-      document.getElementById("blocco-test-attivo").classList.add("nascosto");
       document.getElementById("blocco-nessun-test").classList.remove("nascosto");
       document.getElementById("sottotitolo-test").textContent = "Nessun test attivo";
       return;
     }
 
     document.getElementById("sottotitolo-test").textContent = risultato.test.nome;
+    document.getElementById("blocco-test-attivo").classList.remove("nascosto");
 
     ID_TEST_ATTIVO = risultato.test.id;
     TEST_HA_TIMER = risultato.test.durataMinuti > 0;
@@ -276,7 +291,7 @@ fetch(URL_SCRIPT_GOOGLE + "?azione=getTestAttivo")
     }
   })
   .catch(() => {
-    document.getElementById("blocco-test-attivo").classList.add("nascosto");
+    document.getElementById("blocco-caricamento").classList.add("nascosto");
     document.getElementById("blocco-nessun-test").classList.remove("nascosto");
     document.getElementById("sottotitolo-test").textContent = "Nessun test attivo";
   });
