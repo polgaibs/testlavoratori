@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- REV. 9 — 1 luglio 2026 (stemma con animazione pulsante) -->
+<!-- REV. 11 — 1 luglio 2026 (stemma ingrandito per grande schermo) -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -34,8 +34,8 @@
     padding: 3vh 4vw;
   }
   .stemma {
-    height: 14vh;
-    max-height: 170px;
+    height: 19vh;
+    max-height: 230px;
     width: auto;
     margin-bottom: 2vh;
     filter: drop-shadow(0 6px 18px rgba(0,0,0,0.4));
@@ -208,7 +208,8 @@
       <div id="qrcode"></div>
     </div>
 
-    <p class="istruzione">Inquadra il codice QR con la fotocamera del telefono per accedere al test</p>
+    <p class="istruzione">Inquadra il codice QR con la fotocamera del telefono per accedere</p>
+    <p class="istruzione-secondaria" id="testo-durata-landing"></p>
     <p class="istruzione-secondaria">Tieni pronto il PIN che ti verrà comunicato prima dell'avvio</p>
     <p class="link-testuale">polgaibs.github.io/testlavoratori/quiz.html</p>
   </div>
@@ -272,6 +273,10 @@ fetch(URL_SCRIPT_GOOGLE + "?azione=getTestAttivo")
     }
 
     document.getElementById("sottotitolo-test").textContent = risultato.test.nome;
+    document.getElementById("testo-durata-landing").textContent =
+      risultato.test.durataMinuti > 0
+        ? "Durata: " + risultato.test.durataMinuti + " minuti"
+        : "Nessun limite di tempo";
     document.getElementById("blocco-test-attivo").classList.remove("nascosto");
 
     ID_TEST_ATTIVO = risultato.test.id;
